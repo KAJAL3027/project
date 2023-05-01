@@ -1,0 +1,7 @@
+flask
+sqlalchemy
+pytorch
+pandas
+numpy
+torch
+torchvision

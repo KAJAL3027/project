@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block css %}{% endblock %}
+{% block content %}
+<div class="container">
+    <div class="row mt-5">
+        <div class="col-md-10 mx-auto">
+            <div class="container-fluid">
+                <div class="row">
+                    {% for image in images %}
+                    <div class="col-md-4">
+                        <div class="card">
+                            <img class="card-img-top" src="{{image}}" alt="">
+                            <div class="card-body">
+                                <!-- actions -->
+                                <div class="d-flex justify-content-between">
+                                    <a href="{{image}}" class="btn btn-primary" download>Download</a>
+                                    <a href="/predict/satellite/image/{{image.id}}" class="btn btn-outline-primary" download>Predict</a>
+                                    <a href="/delete/satellite/image/{{image.id}}" class="btn btn-danger">Delete</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block js %}{% endblock %}
