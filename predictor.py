@@ -2,6 +2,27 @@ import torch
 import torchvision.transforms as transforms
 from PIL import Image
 import torchvision
+
+import torch
+import torch.nn as nn
+
+class ImageClassifier(nn.Module):
+    def __init__(self):
+        super(ImageClassifier, self).__init__()
+        self.conv1 = nn.Conv2d(3, 16, kernel_size=3, stride=1, padding=1)
+        self.pool = nn.MaxPool2d(kernel_size=2, stride=2)
+        self.conv2 = nn.Conv2d(16, 32, kernel_size=3, stride=1, padding=1)
+        self.fc1 = nn.Linear(32 * 56 * 56, 256)  # adjust weight size
+        self.fc2 = nn.Linear(256, 2)
+
+    def forward(self, x):
+        x = self.pool(nn.functional.relu(self.conv1(x)))
+        x = self.pool(nn.functional.relu(self.conv2(x)))
+        x = x.view(-1, 32 * 56 * 56)
+        x = nn.functional.relu(self.fc1(x))
+        x = self.fc2(x)
+        return x
+
 transform = transforms.Compose([
     transforms.Resize(256),
     transforms.CenterCrop(224),
@@ -31,8 +52,7 @@ def predict_image(image_path, model):
 
 if __name__ == "__main__":
     model_path = 'model_90pct_acc_v1.pt'
-    model = torchvision.models.resnet18(pretrained=True)
-    model.fc = torch.nn.Linear(512, 2)
-    model.load_state_dict(torch.load(model_path))
+    model = torch.load(model_path)
     model.eval()
-    predict_image(r'C:\Users\pranj\OneDrive\project\static\uploads\093.png', model)
+    result = predict_image(r'C:\Users\pranj\OneDrive\project\static\uploads\093.png', model)
+    print(result)

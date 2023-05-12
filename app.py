@@ -11,12 +11,10 @@ from validators import *
 from logger import log
 from werkzeug.utils import secure_filename
 import os
+import torch
+from predictor import predict_image, ImageClassifier
 
-app = Flask(__name__)
-app.secret_key  = '()*(#@!@#)'
-app.config['SQLALCHEMY_DATABASE_URI'] = DB_URL
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['UPLOAD_FOLDER'] = 'static/uploads'
+
 
 def session_add(key, value):
     session[key] = value
@@ -30,6 +28,21 @@ def save_file(file):
 def allowed_file(filename):
     return '.' in filename and \
         filename.rsplit('.', 1)[1].lower() in ['png', 'jpg', 'jpeg','tiff']
+
+
+def load_model():
+    model_path = 'model_90pct_acc_v1.pt'
+    model = torch.load(model_path)
+    model.eval()
+    return model
+
+# global variables
+app = Flask(__name__)
+app.secret_key  = '()*(#@!@#)'
+app.config['SQLALCHEMY_DATABASE_URI'] = DB_URL
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['UPLOAD_FOLDER'] = 'static/uploads'
+model = load_model()
 
 @app.route('/')
 def index():
@@ -73,6 +86,25 @@ def delete_satellite_image(id):
             os.remove(path)
         flash('Image deleted successfully', 'success')
         return redirect(url_for('gallery'))
+
+@app.route('/predict/satellite/image/<int:id>')
+def predict_sattelite_image(id):
+    if 'isauth' not in session:
+        flash('You need to login first', 'danger')
+        return redirect(url_for('index'))
+    db = opendb()
+    image = db.query(SatelliteImage).filter_by(id=id).first()
+    message = ""
+    if image is None:
+        flash('Image not found', 'danger')
+        return redirect(url_for('gallery'))
+    else:
+        result = predict_image(image.path, model)
+        if result == 0:
+            message = "No forest fire detected"
+        else:
+            message = "Forest fire detected"
+    return render_template('predict.html', id=id, message=message, result=result, image=image)
 
 @app.route('/gallery')
 def gallery():
@@ -199,6 +231,7 @@ def view_profile():
     else:
         flash('Please login to continue', 'danger')
         return redirect(url_for('index'))
+
 
 if __name__ == '__main__':
   app.run(host='0.0.0.0', port=8000, debug=True)

@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block css %}
+<style>
+    .card-img-top{
+        
+        object-fit: cover;
+    }
+</style>
+{% endblock %}
+{% block content %}
+<div class="container-fluid p-0">
+    <div class="row my-3">
+        <div class="col-md-6 mx-auto">
+            <div class="card">
+                <div class="card-body">
+                    <h1 class="card-title text-center">
+                        {% if result == 0 %}
+                        <div class="text-danger alert-info" >
+                            <strong>✅</strong> {{message}}
+                        </div>
+                        
+                        {% else %}
+                        <div class="text-success alert-success">
+                            <strong>🔥</strong> {{message}}
+                        </div>
+                        {% endif %}
+                        
+                        by the AI.
+                    </h1>
+                </div>
+                <img class="card-img-bottom" src="/{{image.path}}" alt="">
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block js %}{% endblock %}
