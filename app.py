@@ -112,63 +112,70 @@ def gallery():
     images = db.query(SatelliteImage).all()
     return render_template('gallery.html', images=images)
 
-@app.route('/login', methods=['POST'])
+@app.route('/login', methods=['POST','GET'])
 def login():
-    email = request.form.get('email')
-    password = request.form.get('password')
-    if not validate_email(email):
-        flash('Invalid email', 'danger')
-        return redirect(url_for('index'))
-    if not validate_password(password):
-        flash('Invalid password', 'danger')
-        return redirect(url_for('index'))
-    db = opendb()
-    user = db.query(User).filter_by(email=email).first()
-    if user is not None and user.verify_password(password):
-        session_add('user_id', user.id)
-        session_add('user_name', user.name)
-        session_add('user_email', user.email)
-        session_add('isauth', True)
-        return redirect(url_for('dashboard'))
-    else:
-        flash('Invalid email or password', 'danger')
-        return redirect(url_for('index'))
-    
+    if request.method == 'POST':
+        email = request.form.get('email')
+        password = request.form.get('password')
+        if not validate_email(email):
+            flash('Invalid email', 'danger')
+            return redirect(url_for('index'))
+        if not validate_password(password):
+            flash('Invalid password', 'danger')
+            return redirect(url_for('index'))
+        try:
+            db = opendb()
+            user = db.query(User).filter_by(email=email).first()
+            if user is not None and user.verify_password(password):
+                session_add('user_id', user.id)
+                session_add('user_name', user.name)
+                session_add('user_email', user.email)
+                session_add('isauth', True)
+                return redirect(url_for('dashboard'))
+            else:
+                flash('Invalid email or password', 'danger')
+                return redirect(url_for('index'))
+        except Exception as e:
+            flash('Error: '+str(e), 'danger')
+            return redirect(url_for('index'))    
+        
+    return render_template('login_modal.html') 
+   
 @app.route('/logout')
 def logout():
     session.clear()
     flash('Logged out successfully', 'success')
     return redirect(url_for('index'))
 
-@app.route('/register', methods=['POST'])
+@app.route('/register', methods=['POST','GET'])
 def register():
-    name = request.form.get('username')
-    email = request.form.get('email')
-    password = request.form.get('password')
-    cpassword = request.form.get('cpassword')
-    db = opendb()
-    if not validate_username(name):
-        flash('Invalid username', 'danger')
-        return redirect(url_for('index'))
-    if not validate_email(email):
-        flash('Invalid email', 'danger')
-        return redirect(url_for('index'))
-    if not validate_password(password):
-        flash('Invalid password', 'danger')
-        return redirect(url_for('index'))
-    if password != cpassword:
-        flash('Passwords do not match', 'danger')
-        return redirect(url_for('index'))
-    if db.query(User).filter_by(email=email).first() is not None    :
-        flash('Email already exists', 'danger')
-        return redirect(url_for('index'))
-    elif db.query(User).filter_by(name=name).first() is not None:
-        flash('Username already exists', 'danger')
-        return redirect(url_for('index'))
-    else:
-        db_save(User(name=name, email=email, password=password))
-        flash('User registered successfully', 'success')
-        return redirect(url_for('index'))
+    if request.method == 'POST':
+        name = request.form.get('username')
+        email = request.form.get('email')
+        password = request.form.get('password')
+        cpassword = request.form.get('cpassword')
+        if name and len(name) >= 3:
+            if password and len(password)>=6:
+                if password == cpassword:
+                    try:
+                        db = opendb()
+                        newuser = User(name=name, email=email, password=password)
+                        db.add(newuser)
+                        db.commit()
+                        del db
+                        flash('User registered successfully', 'success')
+                        return redirect(url_for('login'))
+                    except Exception as e:
+                        flash('Error: '+str(e), 'danger')
+                        flash('Email already exists', 'danger')
+                else:
+                    flash('Passwords do not match', 'danger')
+            else:
+                flash('Invalid password', 'danger')
+        else:
+            flash('Invalid username', 'danger')
+    return render_template('register_modal.html')
+    
     
 @app.route('/dashboard')
 def dashboard():
