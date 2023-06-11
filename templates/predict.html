@@ -2,8 +2,8 @@
 
 {% block css %}
 <style>
-    .card-img-top{
-        
+    .card-img-top {
+
         object-fit: cover;
     }
 </style>
@@ -14,22 +14,37 @@
         <div class="col-md-6 mx-auto">
             <div class="card">
                 <div class="card-body">
+                    <p class="lead text-center">
+                        total area in square meters is <span class="text-primary">{{area}}</span> sqm
+                    </p>
                     <h1 class="card-title text-center">
                         {% if result == 0 %}
-                        <div class="text-danger alert-info" >
+                        <div class="text-danger alert-info">
                             <strong>✅</strong> {{message}}
                         </div>
-                        
+
                         {% else %}
                         <div class="text-success alert-success">
                             <strong>🔥</strong> {{message}}
                         </div>
                         {% endif %}
-                        
+
                         by the AI.
                     </h1>
+                    {% if result == 1 %}
+                    <p class="fs-1 lead text-center">
+                        The probability of fire is <span class="text-primary">{{prob}}</span> %
+                    </p>
+                    {% else %}
+                    <p class="fs-1 lead text-center">
+                        <span class="text-primary">{{prob}}</span> % confidence that there is no fire
+                    </p>
+                    {% endif %}
+
+
                 </div>
-                <img class="card-img-bottom" src="/{{image.path}}" alt="">
+                <img class="card-img-bottom" src="/static/uploads/overlay.png" alt="">
+                
             </div>
         </div>
     </div>

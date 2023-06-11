@@ -34,21 +34,17 @@ transform = transforms.Compose([
 def predict_image(image_path, model):
     # Open the image using PIL
     image = Image.open(image_path).convert('RGB')
-
     # Apply the transformation pipeline
     image_tensor = transform(image)
-
     # Add a batch dimension
     image_tensor = image_tensor.unsqueeze(0)
-
     # Make a prediction
     with torch.no_grad():
         output = model(image_tensor)
-
     # Get the predicted class index
     predicted_index = torch.argmax(output).item()
-
-    return predicted_index
+    prob = torch.nn.functional.softmax(output, dim=1)
+    return predicted_index, prob[0][predicted_index].item()
 
 if __name__ == "__main__":
     model_path = 'model_90pct_acc_v1.pt'

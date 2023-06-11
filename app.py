@@ -13,8 +13,12 @@ from werkzeug.utils import secure_filename
 import os
 import torch
 from predictor import predict_image, ImageClassifier
+import numpy as np
+from random import choice
+from grid_generator import generate_grid_image
+from PIL import Image
 
-
+sizes = [100, 100]
 
 def session_add(key, value):
     session[key] = value
@@ -95,16 +99,24 @@ def predict_sattelite_image(id):
     db = opendb()
     image = db.query(SatelliteImage).filter_by(id=id).first()
     message = ""
+    img = Image.open(image.path)
+    grid_img = generate_grid_image(img.size[0], img.size[1], choice(sizes))
+    # paste grid on original image
+    img.paste(grid_img, (0,0), grid_img)    
+    img.save('static/uploads/overlay.png')
+
+    area = img.size[0]*img.size[1]
+    
     if image is None:
         flash('Image not found', 'danger')
         return redirect(url_for('gallery'))
     else:
-        result = predict_image(image.path, model)
+        result, prob = predict_image(image.path, model)
         if result == 0:
             message = "No forest fire detected"
         else:
             message = "Forest fire detected"
-    return render_template('predict.html', id=id, message=message, result=result, image=image)
+    return render_template('predict.html', id=id, message=message, result=result, image=image, area=area, prob=round(prob,5)*100)
 
 @app.route('/gallery')
 def gallery():
@@ -164,7 +176,7 @@ def register():
                         db.commit()
                         del db
                         flash('User registered successfully', 'success')
-                        return redirect(url_for('login'))
+                        return redirect('/')
                     except Exception as e:
                         flash('Error: '+str(e), 'danger')
                         flash('Email already exists', 'danger')
